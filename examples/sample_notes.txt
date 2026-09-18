@@ -1,0 +1,33 @@
+Lecture 8: Cellular Respiration
+
+Cellular respiration converts glucose and oxygen into ATP, carbon dioxide, and
+water. It happens in three main stages.
+
+Glycolysis takes place in the cytoplasm. One glucose molecule (6 carbons) is
+split into two pyruvate molecules (3 carbons each). This produces a net gain
+of 2 ATP (via substrate-level phosphorylation) and 2 NADH. It does not
+require oxygen.
+
+The pyruvate molecules are then transported into the mitochondrial matrix,
+where they are converted to Acetyl-CoA, releasing CO2 and producing NADH.
+
+The Krebs cycle (also called the citric acid cycle) occurs in the
+mitochondrial matrix. Each turn of the cycle takes in one Acetyl-CoA and
+produces 3 NADH, 1 FADH2, 1 ATP (via GTP), and 2 CO2. The cycle turns twice
+per original glucose molecule since glycolysis produces two pyruvate.
+
+The electron transport chain (ETC) is located in the inner mitochondrial
+membrane. NADH and FADH2 donate electrons to the chain, which pumps protons
+across the membrane, creating a gradient. ATP synthase uses this gradient
+(chemiosmosis) to produce ATP. Oxygen is the final electron acceptor,
+combining with electrons and protons to form water.
+
+In total, one glucose molecule yields approximately 30-32 ATP through
+aerobic respiration, though the exact number varies by cell type and
+shuttle mechanism used to move NADH into the mitochondria.
+
+Anaerobic respiration (fermentation) occurs when oxygen is unavailable.
+Lactic acid fermentation (in muscle cells) regenerates NAD+ by converting
+pyruvate to lactate. Alcoholic fermentation (in yeast) converts pyruvate to
+ethanol and CO2, also regenerating NAD+. Both only yield the 2 ATP from
+glycolysis.
