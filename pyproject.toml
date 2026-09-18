@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cheatscribe"
+version = "0.1.0"
+description = "Upload your notes, get an AI-summarized cheat sheet rendered in handwriting."
+requires-python = ">=3.10"
+dependencies = [
+    "anthropic>=0.40.0",
+    "python-pptx>=1.0.2",
+    "pypdf>=5.0.0",
+    "pdf2image>=1.17.0",
+    "Pillow>=10.4.0",
+]
+
+[project.scripts]
+cheatscribe = "cheatscribe.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
