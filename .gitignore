@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# generated output
+out/
+*.svg.tmp
+
+# the upstream handwriting-synthesis engine is cloned locally, never committed here
+engine/handwriting-synthesis/
+
+# local secrets
+.env
