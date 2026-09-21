@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>cheatscribe</title>
+<style>
+  :root {
+    --paper: #faf7f0;
+    --paper-raised: #fffdf8;
+    --ink: #1b2a4a;
+    --ink-soft: #5b6478;
+    --rule: #dcd6c8;
+    --accent: #2f4f9e;
+    --accent-soft: #eaf0ff;
+    --danger: #a8331f;
+    --radius: 14px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #16181d;
+      --paper-raised: #1e2128;
+      --ink: #e8e6e0;
+      --ink-soft: #9aa0ad;
+      --rule: #343841;
+      --accent: #8fb0ff;
+      --accent-soft: #232936;
+      --danger: #ff8e78;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font: 15px/1.55 ui-sans-serif, -apple-system, "Segoe UI", system-ui, sans-serif;
+    padding: 0 16px;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding-block: 48px 72px; }
+
+  header { margin-bottom: 32px; }
+  h1 {
+    font-family: "Bradley Hand", "Segoe Print", "Comic Sans MS", cursive, serif;
+    font-size: clamp(38px, 7vw, 54px);
+    margin: 0 0 6px;
+    letter-spacing: -0.5px;
+  }
+  .tagline { color: var(--ink-soft); margin: 0; font-size: 16px; }
+
+  .dropzone {
+    border: 2px dashed var(--rule);
+    border-radius: var(--radius);
+    background: var(--paper-raised);
+    padding: 44px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .15s, background .15s, transform .1s;
+  }
+  .dropzone:hover, .dropzone:focus-visible { border-color: var(--accent); outline: none; }
+  .dropzone.dragging {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    transform: scale(1.005);
+  }
+  .dropzone h2 { margin: 0 0 6px; font-size: 19px; font-weight: 600; }
+  .dropzone p { margin: 0; color: var(--ink-soft); font-size: 13.5px; }
+  .dropzone .glyph { font-size: 34px; display: block; margin-bottom: 12px; opacity: .65; }
+
+  ul.files { list-style: none; padding: 0; margin: 18px 0 0; display: grid; gap: 8px; }
+  ul.files li {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--paper-raised);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 10px 14px;
+  }
+  .fname { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fsize { color: var(--ink-soft); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  .remove {
+    border: none; background: none; color: var(--ink-soft);
+    cursor: pointer; font-size: 19px; line-height: 1; padding: 2px 4px; border-radius: 6px;
+  }
+  .remove:hover { color: var(--danger); background: var(--accent-soft); }
+
+  .options {
+    margin-top: 26px; display: grid; gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+  label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  input[type=text], select {
+    width: 100%; padding: 9px 11px; font: inherit; font-size: 14px;
+    border: 1px solid var(--rule); border-radius: 9px;
+    background: var(--paper-raised); color: var(--ink);
+  }
+  input[type=text]:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .hint { font-size: 12px; color: var(--ink-soft); margin-top: 5px; }
+
+  .go {
+    margin-top: 28px; width: 100%; padding: 14px;
+    font: inherit; font-size: 16px; font-weight: 600;
+    background: var(--accent); color: #fff; border: none;
+    border-radius: 11px; cursor: pointer;
+  }
+  .go:disabled { opacity: .5; cursor: not-allowed; }
+  .go:not(:disabled):hover { filter: brightness(1.08); }
+
+  .status { margin-top: 20px; font-size: 14px; }
+  .status.err {
+    color: var(--danger); background: var(--paper-raised);
+    border: 1px solid var(--danger); border-radius: 10px; padding: 12px 14px;
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .spinner {
+    display: inline-block; width: 15px; height: 15px; vertical-align: -2px;
+    border: 2px solid var(--rule); border-top-color: var(--accent);
+    border-radius: 50%; animation: spin .8s linear infinite; margin-right: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .result { margin-top: 34px; }
+  .result img {
+    width: 100%; border: 1px solid var(--rule); border-radius: var(--radius);
+    background: #fff;
+  }
+  .resultbar {
+    display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+    justify-content: space-between; margin-bottom: 12px;
+  }
+  .meta { color: var(--ink-soft); font-size: 13px; }
+  .download {
+    display: inline-block; padding: 9px 16px; font-size: 14px; font-weight: 600;
+    background: var(--paper-raised); color: var(--accent);
+    border: 1px solid var(--accent); border-radius: 9px; text-decoration: none;
+  }
+  .download:hover { background: var(--accent-soft); }
+
+  .notice {
+    margin-top: 26px; padding: 13px 15px; font-size: 13.5px;
+    background: var(--paper-raised); border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent); border-radius: 9px; color: var(--ink-soft);
+  }
+  .notice code {
+    font-size: 12.5px; background: var(--accent-soft);
+    padding: 1px 5px; border-radius: 4px; color: var(--ink);
+  }
+  details { margin-top: 18px; }
+  summary { cursor: pointer; font-size: 13.5px; color: var(--ink-soft); }
+  pre {
+    background: var(--paper-raised); border: 1px solid var(--rule);
+    border-radius: 9px; padding: 13px; overflow-x: auto; font-size: 12.5px;
+  }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>cheatscribe</h1>
+    <p class="tagline">Drop your notes and slides in. Get a handwritten cheat sheet out.</p>
+  </header>
+
+  {% if not has_api_key %}
+  <div class="notice" role="alert">
+    <strong>Setup needed:</strong> <code>ANTHROPIC_API_KEY</code> isn't set, so summarizing will fail.
+    Quit, run <code>export ANTHROPIC_API_KEY=your-key</code>, then start cheatscribe again.
+  </div>
+  {% endif %}
+
+  <div id="dropzone" class="dropzone" tabindex="0" role="button"
+       aria-label="Choose files or drag them here">
+    <span class="glyph" aria-hidden="true">✎</span>
+    <h2>Drag your files here</h2>
+    <p>or click to browse — {{ accepted|join(', ') }}</p>
+  </div>
+  <input id="fileinput" type="file" multiple hidden
+         accept="{{ accepted|join(',') }}">
+
+  <ul id="filelist" class="files"></ul>
+
+  <div class="options">
+    <div>
+      <label for="topic">Focus (optional)</label>
+      <input id="topic" type="text" placeholder="e.g. midterm 2: cell respiration">
+      <p class="hint">Narrows what gets pulled out.</p>
+    </div>
+    <div>
+      <label for="columns">Columns</label>
+      <select id="columns">
+        <option value="2">2 — roomier</option>
+        <option value="3" selected>3 — standard cram sheet</option>
+        <option value="4">4 — very dense</option>
+      </select>
+    </div>
+    <div>
+      <label for="density">Density</label>
+      <select id="density">
+        <option value="600">Light (~600 words)</option>
+        <option value="1000" selected>Standard (~1000 words)</option>
+        <option value="1600">Packed (~1600 words)</option>
+      </select>
+    </div>
+    <div>
+      <label for="backend">Handwriting</label>
+      <select id="backend">
+        <option value="auto" selected>Auto</option>
+        <option value="fallback">Font (no setup)</option>
+        <option value="engine">Real engine (Docker)</option>
+      </select>
+      <p class="hint">
+        {% if engine_ready %}Engine is built and ready.{% else %}Engine not built — using font.{% endif %}
+      </p>
+    </div>
+  </div>
+
+  <button id="go" class="go" disabled>Make my cheat sheet</button>
+
+  <div id="status" class="status" role="status" aria-live="polite"></div>
+
+  <div id="result" class="result" hidden>
+    <div class="resultbar">
+      <div>
+        <strong id="rtitle"></strong>
+        <div class="meta" id="rmeta"></div>
+      </div>
+      <a id="download" class="download" download>Download</a>
+    </div>
+    <img id="rimg" alt="Generated cheat sheet">
+    <details>
+      <summary>What it pulled out (structured summary)</summary>
+      <pre id="rjson"></pre>
+    </details>
+  </div>
+</div>
+
+<script>
+(function () {
+  const dropzone = document.getElementById('dropzone');
+  const fileinput = document.getElementById('fileinput');
+  const filelist = document.getElementById('filelist');
+  const go = document.getElementById('go');
+  const status = document.getElementById('status');
+  const result = document.getElementById('result');
+
+  const accepted = {{ accepted|tojson }};
+  let files = [];
+
+  const fmtSize = (b) =>
+    b < 1024 ? b + ' B'
+    : b < 1048576 ? (b / 1024).toFixed(0) + ' KB'
+    : (b / 1048576).toFixed(1) + ' MB';
+
+  const extOf = (name) => {
+    const i = name.lastIndexOf('.');
+    return i === -1 ? '' : name.slice(i).toLowerCase();
+  };
+
+  function addFiles(incoming) {
+    const rejected = [];
+    for (const f of incoming) {
+      if (!accepted.includes(extOf(f.name))) { rejected.push(f.name); continue; }
+      if (!files.some((x) => x.name === f.name && x.size === f.size)) files.push(f);
+    }
+    if (rejected.length) {
+      showError('Skipped unsupported file(s): ' + rejected.join(', '));
+    } else {
+      status.className = 'status';
+      status.textContent = '';
+    }
+    renderFiles();
+  }
+
+  function renderFiles() {
+    filelist.innerHTML = '';
+    files.forEach((f, i) => {
+      const li = document.createElement('li');
+
+      const name = document.createElement('span');
+      name.className = 'fname';
+      name.textContent = f.name;
+
+      const size = document.createElement('span');
+      size.className = 'fsize';
+      size.textContent = fmtSize(f.size);
+
+      const rm = document.createElement('button');
+      rm.className = 'remove';
+      rm.type = 'button';
+      rm.setAttribute('aria-label', 'Remove ' + f.name);
+      rm.textContent = '×';
+      rm.onclick = () => { files.splice(i, 1); renderFiles(); };
+
+      li.append(name, size, rm);
+      filelist.append(li);
+    });
+    go.disabled = files.length === 0;
+  }
+
+  function showError(msg) {
+    status.className = 'status err';
+    status.textContent = msg;
+  }
+
+  dropzone.addEventListener('click', () => fileinput.click());
+  dropzone.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileinput.click(); }
+  });
+  fileinput.addEventListener('change', () => { addFiles(fileinput.files); fileinput.value = ''; });
+
+  ['dragenter', 'dragover'].forEach((ev) =>
+    dropzone.addEventListener(ev, (e) => {
+      e.preventDefault();
+      dropzone.classList.add('dragging');
+    })
+  );
+  ['dragleave', 'drop'].forEach((ev) =>
+    dropzone.addEventListener(ev, (e) => {
+      e.preventDefault();
+      if (ev === 'dragleave' && dropzone.contains(e.relatedTarget)) return;
+      dropzone.classList.remove('dragging');
+    })
+  );
+  dropzone.addEventListener('drop', (e) => {
+    if (e.dataTransfer?.files?.length) addFiles(e.dataTransfer.files);
+  });
+  // don't let a stray miss open the file in the tab
+  window.addEventListener('dragover', (e) => e.preventDefault());
+  window.addEventListener('drop', (e) => e.preventDefault());
+
+  go.addEventListener('click', async () => {
+    const body = new FormData();
+    files.forEach((f) => body.append('files', f));
+    body.append('topic', document.getElementById('topic').value);
+    body.append('columns', document.getElementById('columns').value);
+    body.append('target_words', document.getElementById('density').value);
+    body.append('backend', document.getElementById('backend').value);
+
+    go.disabled = true;
+    result.hidden = true;
+    status.className = 'status';
+    status.innerHTML = '<span class="spinner"></span>Reading your notes and writing the sheet — this takes a bit.';
+
+    try {
+      const res = await fetch('/generate', { method: 'POST', body });
+      const data = await res.json();
+      if (!res.ok) { showError(data.error || ('Request failed (' + res.status + ')')); return; }
+
+      status.className = 'status';
+      status.textContent = '';
+      document.getElementById('rtitle').textContent = data.title;
+      document.getElementById('rmeta').textContent =
+        `${data.sections} sections · ${data.lines} lines · rendered with the ${data.backend} backend`;
+      const img = document.getElementById('rimg');
+      img.src = data.image_url + '?t=' + Date.now();
+      const dl = document.getElementById('download');
+      dl.href = data.image_url;
+      dl.setAttribute('download', (data.title || 'cheatsheet').replace(/[^\w.-]+/g, '_') + '.png');
+      document.getElementById('rjson').textContent = JSON.stringify(data.summary, null, 2);
+      result.hidden = false;
+      result.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (err) {
+      showError('Could not reach the cheatscribe server: ' + err.message);
+    } finally {
+      go.disabled = files.length === 0;
+    }
+  });
+})();
+</script>
+</body>
+</html>
