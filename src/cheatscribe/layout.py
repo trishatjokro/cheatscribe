@@ -7,7 +7,7 @@ this module knows nothing about how a line actually gets drawn.
 from __future__ import annotations
 
 import textwrap
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from .summarize import CheatSheet
 
@@ -40,6 +40,34 @@ def _wrap_width_chars(column_width: int, font_size: int) -> int:
     return max(10, int(column_width / char_width))
 
 
+@dataclass
+class _Line:
+    text: str
+    font_size: int
+    height: int
+    is_heading: bool
+    starts_section: bool
+
+
+def _flatten(sheet: CheatSheet, column_width: int) -> list[_Line]:
+    lines: list[_Line] = []
+    for section in sheet.sections:
+        heading_lines = textwrap.wrap(
+            section.heading.upper(), _wrap_width_chars(column_width, HEADING_FONT_SIZE)
+        ) or [section.heading.upper()]
+        for i, hl in enumerate(heading_lines):
+            lines.append(_Line(hl, HEADING_FONT_SIZE, HEADING_LINE_HEIGHT, True, i == 0))
+
+        for item in section.items:
+            wrapped = textwrap.wrap(item, _wrap_width_chars(column_width, ITEM_FONT_SIZE)) or [item]
+            for wl in wrapped:
+                lines.append(_Line(wl, ITEM_FONT_SIZE, ITEM_LINE_HEIGHT, False, False))
+
+        if lines:  # gap before the next section rides on the last line of this one
+            lines[-1] = replace(lines[-1], height=lines[-1].height + ITEM_LINE_HEIGHT // 2)
+    return lines
+
+
 def layout_cheat_sheet(
     sheet: CheatSheet,
     columns: int = 3,
@@ -47,52 +75,45 @@ def layout_cheat_sheet(
     page_height: int = PAGE_HEIGHT,
 ) -> list[LinePlacement]:
     column_width = (page_width - 2 * MARGIN - (columns - 1) * COLUMN_GAP) // columns
-    placements: list[LinePlacement] = []
+    available_height = page_height - 2 * MARGIN
 
+    lines = _flatten(sheet, column_width)
+    if not lines:
+        return []
+
+    # Balance across all columns instead of filling one and spilling over: aim
+    # for an even share of the total, so a 3-column sheet actually reads as three.
+    total_height = sum(line.height for line in lines)
+    target_height = min(available_height, max(total_height / columns, HEADING_LINE_HEIGHT))
+
+    placements: list[LinePlacement] = []
     col = 0
     y = MARGIN
-    col_x = MARGIN
 
-    def start_new_column():
-        nonlocal col, y, col_x
-        col += 1
-        y = MARGIN
-        col_x = MARGIN + col * (column_width + COLUMN_GAP)
+    for i, line in enumerate(lines):
+        limit = available_height if col == columns - 1 else target_height
 
-    for section in sheet.sections:
-        heading_lines = textwrap.wrap(
-            section.heading.upper(), _wrap_width_chars(column_width, HEADING_FONT_SIZE)
-        ) or [section.heading.upper()]
-        item_line_groups = [
-            textwrap.wrap(item, _wrap_width_chars(column_width, ITEM_FONT_SIZE)) or [item]
-            for item in section.items
-        ]
+        # keep a heading with the first couple of lines under it
+        lookahead = line.height
+        if line.starts_section:
+            for follower in lines[i + 1 : i + 3]:
+                lookahead += follower.height
 
-        needed = len(heading_lines) * HEADING_LINE_HEIGHT + (
-            item_line_groups[0:1] and len(item_line_groups[0]) * ITEM_LINE_HEIGHT
-        )
-        if col < columns and y + needed > page_height - MARGIN:
-            if col + 1 < columns:
-                start_new_column()
-            # if it's the last column, just overflow rather than drop content
+        if y - MARGIN + lookahead > limit and col + 1 < columns and placements:
+            col += 1
+            y = MARGIN
 
-        for hl in heading_lines:
-            if y + HEADING_LINE_HEIGHT > page_height - MARGIN and col + 1 < columns:
-                start_new_column()
-            placements.append(
-                LinePlacement(hl, col_x, y, column_width, HEADING_FONT_SIZE, True, col)
+        placements.append(
+            LinePlacement(
+                text=line.text,
+                x=MARGIN + col * (column_width + COLUMN_GAP),
+                y=y,
+                width=column_width,
+                font_size=line.font_size,
+                is_heading=line.is_heading,
+                column=col,
             )
-            y += HEADING_LINE_HEIGHT
-
-        for lines in item_line_groups:
-            for line in lines:
-                if y + ITEM_LINE_HEIGHT > page_height - MARGIN and col + 1 < columns:
-                    start_new_column()
-                placements.append(
-                    LinePlacement(line, col_x, y, column_width, ITEM_FONT_SIZE, False, col)
-                )
-                y += ITEM_LINE_HEIGHT
-
-        y += ITEM_LINE_HEIGHT // 2  # gap before next section
+        )
+        y += line.height
 
     return placements
