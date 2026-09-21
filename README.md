@@ -13,7 +13,7 @@ synthesis approaches that shaped this design.
 ## How it works
 
 ```
-your files (.pptx/.pdf/.txt/.md/images)
+your files (.pptx/.pdf/.txt/.md/images)  — dropped into the web UI, or --input
         │
         ▼
    ingest.py          — extracts text; sparse/scanned pages go through as images
@@ -38,22 +38,38 @@ separately), and outputting short standalone lines instead of paragraphs.
 
 The handwriting half is the hard part — see below.
 
-## Setup
+## Quick start (drag and drop)
+
+Put your key in a `.env` file in this folder:
+
+```
+ANTHROPIC_API_KEY=your-key-here
+```
+
+Then **double-click `cheatscribe.command`**. It sets everything up on first
+run, starts the app, and opens it in your browser. Drag your files onto the
+page, pick how dense you want it, and hit *Make my cheat sheet*.
+
+<!-- screenshot: drop your files here -> handwritten sheet -->
+
+To start it manually instead:
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-export ANTHROPIC_API_KEY=...  # your key
+export ANTHROPIC_API_KEY=...
+PYTHONPATH=src python -m cheatscribe.web.app     # http://127.0.0.1:5001
 ```
 
-Try it immediately with the zero-setup fallback renderer (a handwriting-style
-font — looks like a computer, but proves the pipeline works):
+## Command line
+
+Same pipeline, no browser:
 
 ```bash
 python -m cheatscribe.cli --input examples/sample_notes.txt --out out/cheatsheet.png
 ```
 
-Optionally fetch a nicer placeholder font first:
+Optionally fetch a nicer fallback font first:
 
 ```bash
 scripts/fetch_fallback_font.sh
@@ -116,8 +132,13 @@ author published it.
 
 ## Project status
 
-Scaffold stage: ingest/summarize/layout/fallback-render are wired end-to-end
-and runnable today. The Docker engine path is implemented per the upstream
-project's documented API but not yet verified against a real build (that
-project's dependencies are old enough that first-run debugging is expected —
-see RESEARCH.md § technical build options).
+Ingest → summarize → layout → fallback-render is wired end-to-end and
+verified working, including the drag-and-drop web UI (tested with a stubbed
+summarizer, since exercising it for real needs an `ANTHROPIC_API_KEY`). The
+multi-column layout balances content evenly across columns rather than
+filling the first one and leaving the rest blank.
+
+The Docker engine path is implemented per the upstream project's documented
+API but not yet verified against a real build (that project's dependencies
+are old enough that first-run debugging is expected — see RESEARCH.md §
+technical build options).
