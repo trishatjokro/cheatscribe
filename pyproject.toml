@@ -13,10 +13,12 @@ dependencies = [
     "pypdf>=5.0.0",
     "pdf2image>=1.17.0",
     "Pillow>=10.4.0",
+    "flask>=3.0.0",
 ]
 
 [project.scripts]
 cheatscribe = "cheatscribe.cli:main"
+cheatscribe-web = "cheatscribe.web.app:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
