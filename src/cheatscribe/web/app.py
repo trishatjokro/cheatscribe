@@ -42,7 +42,7 @@ def index():
 @app.route("/generate", methods=["POST"])
 def generate():
     if not os.environ.get("ANTHROPIC_API_KEY"):
-        return jsonify(error="ANTHROPIC_API_KEY is not set. See the setup note below."), 400
+        return jsonify(error="ANTHROPIC_API_KEY is not set — see the setup note at the top of the page."), 400
 
     uploads = request.files.getlist("files")
     if not uploads:
