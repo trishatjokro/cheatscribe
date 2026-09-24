@@ -332,9 +332,7 @@
     if (rejected.length) {
       showError('Skipped unsupported file(s): ' + rejected.join(', '));
     } else {
-      status.className = 'status';
-      status.removeAttribute('role');
-      status.textContent = '';
+      clearStatus();
       if (added) sayToScreenReader(`${added} file${added === 1 ? '' : 's'} added. ${files.length} selected in total.`);
     }
     renderFiles();
