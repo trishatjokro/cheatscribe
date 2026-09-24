@@ -207,6 +207,7 @@
     <p class="tagline">Drop your notes and slides in. Get a handwritten cheat sheet out.</p>
   </header>
 
+  <main id="main">
   {% if not has_api_key %}
   <div class="notice" role="alert">
     <strong>Setup needed:</strong> <code>ANTHROPIC_API_KEY</code> isn't set, so summarizing will fail.
@@ -214,7 +215,6 @@
   </div>
   {% endif %}
 
-  <main id="main">
   <form id="generate-form" novalidate>
 
     <label id="dropzone" for="fileinput" class="dropzone">
