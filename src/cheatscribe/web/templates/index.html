@@ -368,9 +368,17 @@
     go.disabled = files.length === 0;
   }
 
+  function clearStatus() {
+    status.className = 'status';
+    status.setAttribute('role', 'status');
+    status.setAttribute('aria-live', 'polite');
+    status.textContent = '';
+  }
+
   function showError(msg) {
     status.className = 'status err';
     status.setAttribute('role', 'alert');
+    status.setAttribute('aria-live', 'assertive');
     status.textContent = msg;
   }
 
@@ -432,8 +440,7 @@
 
     go.disabled = true;
     result.hidden = true;
-    status.className = 'status';
-    status.removeAttribute('role');
+    clearStatus();
     status.innerHTML = '<span class="spinner" aria-hidden="true"></span>Reading your notes and writing the sheet — this takes a bit.';
 
     try {
@@ -441,9 +448,7 @@
       const data = await res.json();
       if (!res.ok) { showError(data.error || ('Request failed (' + res.status + ')')); return; }
 
-      status.className = 'status';
-      status.removeAttribute('role');
-      status.textContent = '';
+      clearStatus();
 
       const rtitle = document.getElementById('rtitle');
       rtitle.textContent = data.title;
