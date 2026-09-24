@@ -197,6 +197,7 @@
 </style>
 </head>
 <body>
+<a class="skip-link" href="#main">Skip to main content</a>
 <div class="wrap">
   <header>
     <h1>cheatscribe</h1>
@@ -210,70 +211,81 @@
   </div>
   {% endif %}
 
-  <div id="dropzone" class="dropzone" tabindex="0" role="button"
-       aria-label="Choose files or drag them here">
-    <span class="glyph" aria-hidden="true">✎</span>
-    <h2>Drag your files here</h2>
-    <p>or click to browse — {{ accepted|join(', ') }}</p>
-  </div>
-  <input id="fileinput" type="file" multiple hidden
-         accept="{{ accepted|join(',') }}">
+  <main id="main">
+  <form id="generate-form" novalidate>
 
-  <ul id="filelist" class="files"></ul>
+    <label id="dropzone" for="fileinput" class="dropzone">
+      <span class="glyph" aria-hidden="true">✎</span>
+      <span class="dropzone-title">Drag your files here</span>
+      <span id="dropzone-hint">or click to browse — accepted: {{ accepted|join(', ') }}</span>
+    </label>
+    <input id="fileinput" type="file" multiple
+           accept="{{ accepted|join(',') }}"
+           aria-describedby="dropzone-hint">
 
-  <div class="options">
-    <div>
-      <label for="topic">Focus (optional)</label>
-      <input id="topic" type="text" placeholder="e.g. midterm 2: cell respiration">
-      <p class="hint">Narrows what gets pulled out.</p>
-    </div>
-    <div>
-      <label for="columns">Columns</label>
-      <select id="columns">
-        <option value="2">2 — roomier</option>
-        <option value="3" selected>3 — standard cram sheet</option>
-        <option value="4">4 — very dense</option>
-      </select>
-    </div>
-    <div>
-      <label for="density">Density</label>
-      <select id="density">
-        <option value="600">Light (~600 words)</option>
-        <option value="1000" selected>Standard (~1000 words)</option>
-        <option value="1600">Packed (~1600 words)</option>
-      </select>
-    </div>
-    <div>
-      <label for="backend">Handwriting</label>
-      <select id="backend">
-        <option value="auto" selected>Auto</option>
-        <option value="fallback">Font (no setup)</option>
-        <option value="engine">Real engine (Docker)</option>
-      </select>
-      <p class="hint">
-        {% if engine_ready %}Engine is built and ready.{% else %}Engine not built — using font.{% endif %}
-      </p>
-    </div>
-  </div>
+    <ul id="filelist" class="files" aria-label="Selected files"></ul>
 
-  <button id="go" class="go" disabled>Make my cheat sheet</button>
+    <fieldset>
+      <legend>Cheat sheet options</legend>
+      <div class="options">
+        <div>
+          <label for="topic">Focus (optional)</label>
+          <input id="topic" type="text" placeholder="e.g. midterm 2: cell respiration"
+                 aria-describedby="topic-hint">
+          <p class="hint" id="topic-hint">Narrows what gets pulled out.</p>
+        </div>
+        <div>
+          <label for="columns">Columns</label>
+          <select id="columns">
+            <option value="2">2 — roomier</option>
+            <option value="3" selected>3 — standard cram sheet</option>
+            <option value="4">4 — very dense</option>
+          </select>
+        </div>
+        <div>
+          <label for="density">Density</label>
+          <select id="density">
+            <option value="600">Light (~600 words)</option>
+            <option value="1000" selected>Standard (~1000 words)</option>
+            <option value="1600">Packed (~1600 words)</option>
+          </select>
+        </div>
+        <div>
+          <label for="backend">Handwriting</label>
+          <select id="backend" aria-describedby="backend-hint">
+            <option value="auto" selected>Auto</option>
+            <option value="fallback">Font (no setup)</option>
+            <option value="engine">Real engine (Docker)</option>
+          </select>
+          <p class="hint" id="backend-hint">
+            {% if engine_ready %}Engine is built and ready.{% else %}Engine not built — using font.{% endif %}
+          </p>
+        </div>
+      </div>
+    </fieldset>
+
+    <button id="go" class="go" type="submit" disabled>Make my cheat sheet</button>
+  </form>
 
   <div id="status" class="status" role="status" aria-live="polite"></div>
+  <div id="sr-announce" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
 
   <div id="result" class="result" hidden>
     <div class="resultbar">
       <div>
-        <strong id="rtitle"></strong>
+        <h2 id="rtitle" tabindex="-1"></h2>
         <div class="meta" id="rmeta"></div>
       </div>
       <a id="download" class="download" download>Download</a>
     </div>
-    <img id="rimg" alt="Generated cheat sheet">
-    <details>
-      <summary>What it pulled out (structured summary)</summary>
+    <img id="rimg" alt="">
+    <details class="textversion" open>
+      <summary>Text version (for screen readers, or to copy/paste)</summary>
+      <p>The image above is handwritten and can't be read by assistive tech — this is the same content as plain text.</p>
       <pre id="rjson"></pre>
     </details>
   </div>
+  </main>
 </div>
 
 <script>
