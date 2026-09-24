@@ -290,14 +290,17 @@
 
 <script>
 (function () {
+  const form = document.getElementById('generate-form');
   const dropzone = document.getElementById('dropzone');
   const fileinput = document.getElementById('fileinput');
   const filelist = document.getElementById('filelist');
   const go = document.getElementById('go');
   const status = document.getElementById('status');
+  const announce = document.getElementById('sr-announce');
   const result = document.getElementById('result');
 
   const accepted = {{ accepted|tojson }};
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let files = [];
 
   const fmtSize = (b) =>
@@ -310,17 +313,26 @@
     return i === -1 ? '' : name.slice(i).toLowerCase();
   };
 
+  function sayToScreenReader(msg) {
+    announce.textContent = '';
+    // force a DOM mutation so repeated identical messages still get announced
+    requestAnimationFrame(() => { announce.textContent = msg; });
+  }
+
   function addFiles(incoming) {
     const rejected = [];
+    let added = 0;
     for (const f of incoming) {
       if (!accepted.includes(extOf(f.name))) { rejected.push(f.name); continue; }
-      if (!files.some((x) => x.name === f.name && x.size === f.size)) files.push(f);
+      if (!files.some((x) => x.name === f.name && x.size === f.size)) { files.push(f); added++; }
     }
     if (rejected.length) {
       showError('Skipped unsupported file(s): ' + rejected.join(', '));
     } else {
       status.className = 'status';
+      status.removeAttribute('role');
       status.textContent = '';
+      if (added) sayToScreenReader(`${added} file${added === 1 ? '' : 's'} added. ${files.length} selected in total.`);
     }
     renderFiles();
   }
@@ -343,7 +355,11 @@
       rm.type = 'button';
       rm.setAttribute('aria-label', 'Remove ' + f.name);
       rm.textContent = '×';
-      rm.onclick = () => { files.splice(i, 1); renderFiles(); };
+      rm.addEventListener('click', () => {
+        files.splice(i, 1);
+        renderFiles();
+        sayToScreenReader(`Removed ${f.name}. ${files.length} file${files.length === 1 ? '' : 's'} remaining.`);
+      });
 
       li.append(name, size, rm);
       filelist.append(li);
@@ -353,13 +369,10 @@
 
   function showError(msg) {
     status.className = 'status err';
+    status.setAttribute('role', 'alert');
     status.textContent = msg;
   }
 
-  dropzone.addEventListener('click', () => fileinput.click());
-  dropzone.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileinput.click(); }
-  });
   fileinput.addEventListener('change', () => { addFiles(fileinput.files); fileinput.value = ''; });
 
   ['dragenter', 'dragover'].forEach((ev) =>
@@ -382,7 +395,33 @@
   window.addEventListener('dragover', (e) => e.preventDefault());
   window.addEventListener('drop', (e) => e.preventDefault());
 
-  go.addEventListener('click', async () => {
+  function renderTextVersion(summary) {
+    const container = document.getElementById('rjson');
+    container.innerHTML = '';
+    for (const section of summary.sections || []) {
+      const h3 = document.createElement('h3');
+      h3.textContent = section.heading;
+      container.append(h3);
+      const ul = document.createElement('ul');
+      for (const item of section.items || []) {
+        const li = document.createElement('li');
+        li.textContent = item;
+        ul.append(li);
+      }
+      container.append(ul);
+    }
+  }
+
+  function altTextFor(summary) {
+    const parts = [`Handwritten cheat sheet titled "${summary.title}".`];
+    for (const section of summary.sections || []) {
+      parts.push(`${section.heading}: ${(section.items || []).join('; ')}.`);
+    }
+    return parts.join(' ');
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
     const body = new FormData();
     files.forEach((f) => body.append('files', f));
     body.append('topic', document.getElementById('topic').value);
@@ -393,7 +432,8 @@
     go.disabled = true;
     result.hidden = true;
     status.className = 'status';
-    status.innerHTML = '<span class="spinner"></span>Reading your notes and writing the sheet — this takes a bit.';
+    status.removeAttribute('role');
+    status.innerHTML = '<span class="spinner" aria-hidden="true"></span>Reading your notes and writing the sheet — this takes a bit.';
 
     try {
       const res = await fetch('/generate', { method: 'POST', body });
@@ -401,18 +441,30 @@
       if (!res.ok) { showError(data.error || ('Request failed (' + res.status + ')')); return; }
 
       status.className = 'status';
+      status.removeAttribute('role');
       status.textContent = '';
-      document.getElementById('rtitle').textContent = data.title;
+
+      const rtitle = document.getElementById('rtitle');
+      rtitle.textContent = data.title;
       document.getElementById('rmeta').textContent =
         `${data.sections} sections · ${data.lines} lines · rendered with the ${data.backend} backend`;
+
       const img = document.getElementById('rimg');
       img.src = data.image_url + '?t=' + Date.now();
+      img.alt = altTextFor(data.summary);
+
       const dl = document.getElementById('download');
       dl.href = data.image_url;
-      dl.setAttribute('download', (data.title || 'cheatsheet').replace(/[^\w.-]+/g, '_') + '.png');
-      document.getElementById('rjson').textContent = JSON.stringify(data.summary, null, 2);
+      const filename = (data.title || 'cheatsheet').replace(/[^\w.-]+/g, '_') + '.png';
+      dl.setAttribute('download', filename);
+      dl.setAttribute('aria-label', `Download "${data.title}" as an image`);
+
+      renderTextVersion(data.summary);
+
       result.hidden = false;
-      result.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      result.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+      rtitle.focus();
+      sayToScreenReader(`Cheat sheet ready: ${data.title}, ${data.sections} sections.`);
     } catch (err) {
       showError('Could not reach the cheatscribe server: ' + err.message);
     } finally {
