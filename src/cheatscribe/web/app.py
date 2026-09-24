@@ -27,6 +27,7 @@ ALLOWED_EXTENSIONS = TEXT_EXTENSIONS | PPTX_EXTENSIONS | PDF_EXTENSIONS | IMAGE_
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 200 * 1024 * 1024  # 200 MB of notes is plenty
+app.config["TEMPLATES_AUTO_RELOAD"] = True  # edit index.html and just refresh, even with debug=False
 
 
 @app.route("/")
