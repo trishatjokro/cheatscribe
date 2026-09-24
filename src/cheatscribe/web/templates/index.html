@@ -76,7 +76,9 @@
     transition: border-color .15s, background .15s, transform .1s, box-shadow .15s;
   }
   .dropzone:hover { border-color: var(--accent); }
-  .dropzone:focus-within { border-color: var(--accent); box-shadow: var(--focus-ring); }
+  /* #fileinput is a preceding sibling (see markup), not a descendant, so the
+     focus ring is driven by that relationship rather than :focus-within */
+  #fileinput:focus-visible ~ .dropzone { border-color: var(--accent); box-shadow: var(--focus-ring); }
   .dropzone.dragging {
     border-color: var(--accent);
     background: var(--accent-soft);
@@ -217,14 +219,14 @@
 
   <form id="generate-form" novalidate>
 
+    <input id="fileinput" type="file" multiple
+           accept="{{ accepted|join(',') }}"
+           aria-describedby="dropzone-hint">
     <label id="dropzone" for="fileinput" class="dropzone">
       <span class="glyph" aria-hidden="true">✎</span>
       <span class="dropzone-title">Drag your files here</span>
       <span id="dropzone-hint">or click to browse — accepted: {{ accepted|join(', ') }}</span>
     </label>
-    <input id="fileinput" type="file" multiple
-           accept="{{ accepted|join(',') }}"
-           aria-describedby="dropzone-hint">
 
     <ul id="filelist" class="files" aria-label="Selected files"></ul>
 
