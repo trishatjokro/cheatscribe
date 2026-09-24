@@ -188,11 +188,14 @@
   }
   .textversion summary:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: 6px; }
   .textversion p { margin: 0 15px 12px; font-size: 12.5px; color: var(--ink-soft); }
-  pre {
+  .textcontent {
     margin: 0 15px 15px; background: var(--paper);
     border: 1px solid var(--rule-soft); border-radius: 9px;
-    padding: 13px; overflow-x: auto; font-size: 12.5px;
+    padding: 4px 15px 6px; font-size: 13.5px;
   }
+  .textcontent h3 { font-size: 14px; margin: 12px 0 4px; }
+  .textcontent ul { margin: 0 0 4px; padding-left: 20px; }
+  .textcontent li { margin: 2px 0; }
   [hidden] { display: none !important; }
 </style>
 </head>
@@ -282,7 +285,7 @@
     <details class="textversion" open>
       <summary>Text version (for screen readers, or to copy/paste)</summary>
       <p>The image above is handwritten and can't be read by assistive tech — this is the same content as plain text.</p>
-      <pre id="rjson"></pre>
+      <div id="rjson" class="textcontent"></div>
     </details>
   </div>
   </main>
